@@ -1,86 +1,152 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-    <head>
-        <title>To Do App</title>
-        <style>
-            body {
-                display: flex;
-                justify-content: center;
-                background-color: #f4f4f4;
-                padding-top: 40px;
-            }
+  <head>
+    <title>To Do App</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+      integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <style>
+      body {
+        display: flex;
+        justify-content: center;
+        background-color: #f4f4f4;
+        padding-top: 40px;
+      }
 
-            .main {
-                background: #fff;
-                padding: 20px;
-                width: 300px;
-                border-radius: 8px;
-            }
+      .main {
+        background: #fff;
+        padding: 20px;
+        width: 300px;
+        border-radius: 8px;
+      }
 
-            #list {
-                list-style: none;
-                padding-left: 0px;
-            }
+      #list {
+        list-style: none;
+        padding-left: 0px;
+      }
 
-            li {
-                display: flex;
-                justify-content: space-between;
-                margin-top: 5px;
-                background-color: #eee;
-                border-radius: 4px;
-                padding: 4px;
-            }
+      li {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 5px;
+        background-color: #eee;
+        border-radius: 4px;
+        padding: 4px;
+      }
 
-            .done {
-                text-decoration: line-through;
-            }
-        </style>
-    </head>
-    <body>
-        <div class="main">
-            <input id="taskInput" type="text">
-            <button onclick="add()">Kaydet</button>
+      .done {
+        text-decoration: line-through;
+      }
 
-            <ul id="list"></ul>
-        </div>
+      .btn {
+        background: transparent;
+        border: 0;
+        border-radius: 20%;
+      }
 
-        <script>
-            const input = document.getElementById('taskInput');
-            const list = document.getElementById('list');
+      .btn:hover {
+        background-color: rgba(0, 0, 0, 0.2);
+        /* font-size: 24px; */
+      }
+    </style>
+  </head>
+  <body>
+    <div class="main">
+      <input id="taskInput" type="text" />
+      <button class="btn" onclick="add()"><i class="fa-regular fa-floppy-disk"></i></button>
 
-            input.addEventListener('keypress', (e) => {
-                if (e.code === 'Enter') {
-                    add();
-                }
-            });
-            
+      <ul id="list"></ul>
+    </div>
 
-            function add() {
-                const value = input.value;
+    <script>
+      const STORAGE_KEY = "tasks";
+      const input = document.getElementById("taskInput");
+      const list = document.getElementById("list");
 
-                const trimmed = value.trim();
+      document.addEventListener("DOMContentLoaded", ready);
 
-                if (trimmed.length === 0) {
-                    input.value = '';
-                    return;
-                }
-                
-                const li = document.createElement('li');
+      function getTasks() {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY)) ?? [];
+      }
 
-                li.innerHTML = '<span>' + value + '</span><button>X</button>';
+      function saveTasks(tasks) {
+        const json = JSON.stringify(tasks);
+        localStorage.setItem(STORAGE_KEY, json);
+      }
 
-                li.querySelector('span').addEventListener('click', () => {
-                    li.classList.toggle('done');
-                });
+      function ready() {
+        const tasks = getTasks();
 
-                li.querySelector('button').addEventListener('click', () => {
-                    li.remove();
-                });
+        tasks.forEach((task, index) => {
+          const li = createTaskItem(task, index);
 
-                list.appendChild(li);
+          list.appendChild(li);
+        });
+      }
 
-                input.value = '';
-            }
-        </script>
-    </body>
+      input.addEventListener("keypress", (e) => {
+        if (e.code === "Enter") {
+          add();
+        }
+      });
+
+      function createTaskItem(task, index) {
+        const li = document.createElement("li");
+
+        li.innerHTML = "<span>" + task.name + '</span><button class="btn"><i class="fa-solid fa-trash-can"></i></button>';
+
+        if (task.done) {
+          li.classList.add("done");
+        }
+
+        li.querySelector("span").addEventListener("click", () => {
+          li.classList.toggle("done");
+
+          const tasks = getTasks();
+          console.log(tasks, index);
+          tasks[index].done = !tasks[index].done;
+          saveTasks(tasks);
+        });
+
+        li.querySelector("button").addEventListener("click", () => {
+          li.remove();
+
+          const tasks = getTasks();
+          tasks.splice(index, 1);
+          saveTasks(tasks);
+          render();
+        });
+
+        return li;
+      }
+
+      function add() {
+        const value = input.value;
+
+        const trimmed = value.trim();
+
+        if (trimmed.length === 0) {
+          input.value = "";
+          return;
+        }
+
+        const tasks = getTasks();
+        tasks.push({ name: value, done: false });
+        saveTasks(tasks);
+
+        render();
+
+        input.value = "";
+      }
+
+      function render() {
+        list.innerHTML = "";
+        ready();
+      }
+    </script>
+  </body>
 </html>
